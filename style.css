@@ -1,0 +1,39 @@
+body {
+    font-family:consolas, courier new, courier;
+    padding-left:30%;padding-right:30%;padding-top:100px;
+}
+
+img {
+    width: 40%;
+    position: relative;
+    margin: auto;
+    display: block;
+    padding: 20px;
+}
+
+div {
+    padding-bottom:100px;
+}
+
+table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+td {
+    text-align: left;
+}
+
+
+.cell {
+    padding-top: 40px;
+    padding-bottom: 40px;
+    padding-left: 5%;
+    padding-right: 5%;
+    display: table-cell;
+    width: 200px;
+}
+
+h3 {
+    padding-top: 60px;
+}
