@@ -1,2 +1,16 @@
+
+RewriteEngine on
+RewriteCond %{HTTP_HOST} ^shixiao\.org$ [OR]
+RewriteCond %{HTTP_HOST} ^www\.shixiao\.org$
+RewriteRule ^music$ "http\:\/\/shixiao\.org\/listening\.html" [R=301,L]
+
+RewriteCond %{HTTP_HOST} ^shixiao\.org$ [OR]
+RewriteCond %{HTTP_HOST} ^www\.shixiao\.org$
+RewriteRule ^handiwork\/?$ "http\:\/\/www\.shixiao\.org\/handiwork\.html" [R=301,L]
+
 # Use PHP5.4 as default
 AddHandler application/x-httpd-php54 .php
+RewriteCond %{HTTP_HOST} ^shixiao\.org$ [OR]
+RewriteCond %{HTTP_HOST} ^www\.shixiao\.org$
+RewriteRule ^art$ "http\:\/\/shixiao\.org\/handiwork\.html" [R=301,L]
+
