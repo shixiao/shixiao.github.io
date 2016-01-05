@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Iterative Algorithms for Lipschitz Learning on Graphs</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+  </head>
+  <body>
+    <p>
+      <center>
+      <h2 style="padding-bottom:20px">Iterative Algorithms for Lipschitz Learning on Graphs</h2>
+      <h3>Senior Thesis, B.S. Computer Science, December 2015</h3>
+      <h3>Xiao Shi</h3>
+      <h3>Advisor: <a href="http://www.cs.yale.edu/homes/spielman/">Dan Spielman</a></h3>
+      </center>
+    </p>
+
+    <p>
+      <h3>Abstract</h3>
+        This paper considers the problem of computing the Lex-Minimizer (also known as the Absolutely Minimal Lipschitz Extension), where one is given a finite graph along with fixed values at some vertices and needs to compute a value assignment to the rest of the vertices such that the assignment lexicographically minimizes the infinity norm of the value differences across edges (in other words, to compute a value assignment that is as smooth as possible). The Lex-Minimizer has very interesting structural properties such as uniqueness and the max-min gradient averaging property. The Lex-Minimization problem is also related to a variety of other well-studied problems such as the infinity-Laplacians, <i>p</i>-harmonic functions, and <i>&#8467;<sub>p</sub></i>-minimization.
+      <p>
+        Researchers have been using the Lex-Minimizer in various fields such as image processing and machine learning for the past few decades. However, before the recent development in [KRSS15] which presented fast algorithms that compute the Lex-Minimizer in expected time  <i>&Otilde;(mn)</i> (where <i>n</i> is the number of vertices and <i>m</i> is the number of edges in the graph), researchers have been using intuitive iterative algorithms to compute the Lex-Minimizer, which are not provably convergent, let alone efficient. Nonetheless, these iterative algorithms are worth investigating for the following reasons: (1) they are extremely easy to implement; (2) because they are deeply rooted in the structural properties of the Lex-Minimizer, they might lead to new discoveries, (in particular, about error bounds).
+      <p>
+        This paper discusses the structural properties of the Lex-Minimizer, presents a few iterative algorithms which are based on these properties, and proves the convergence of these algorithms for computing the Lex-Minimizer.
+
+    </p>
+
+    <p>
+      <h3><a href="CS490Thesis_XiaoShi.pdf" target="_blank">Thesis</a></h3>
+    </p>
+
+    <p>
+      <h3>Contact</h3>
+      Email: shixiao at shixiao dot org
+    </p>
+
+    <p>
+      <h3>Reference</h3>
+      [KRSS15] Rasmus Kyng, Anup Rao, Sushant Sachdeva, and Daniel A. Spielman. Algorithms for lipschitz learning on graphs. CoRR, abs/1505.00290, 2015.
+    </p>
+
+    <div style="padding-bottom: 200px"></div>
+
+  </body>
+</html>
