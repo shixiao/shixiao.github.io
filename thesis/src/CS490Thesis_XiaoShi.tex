@@ -1,0 +1,597 @@
+\documentclass[12pt]{amsart}
+%%%%%%%%% options for the file macros.tex
+
+\def\showauthornotes{1}
+\def\showkeys{0}
+\def\showdraftbox{0}
+\allowdisplaybreaks[1]
+\let\pref=\prettyref
+
+\input{sxmacros}
+
+%%%%%%%%% Authornotes
+\newcommand{\Snote}{\Authornote{S}}
+\newcommand{\Scomment}{\Authorcomment{S}}
+\newcommand{\Sfnote}{\Authorfnote{S}}
+
+%%%%%%%%% paper specific macros
+\renewcommand{\lecturetitle}[4]{\handout{#1}{#2}{Advisor: \courseprof
+  }{#3}{#4}}
+  
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{float}
+
+
+\setlength{\hoffset}{25pt}
+\addtolength{\textwidth}{-50pt}
+\addtolength{\textheight}{-60pt}
+
+\usepackage{fancyhdr}
+\setlength{\headheight}{18pt}
+\setlength{\headsep}{20pt}
+\setlength{\footskip}{30pt}
+\pagestyle{fancy}
+\lhead{CPSC490 Senior Thesis}
+\rhead{Xiao Shi}
+\cfoot{\thepage}
+
+\newcommand{\grad}{\ensuremath{\mathsf{grad}}}
+\renewcommand{\path}[1]{\ensuremath{\langle {#1} \rangle}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\newcommand{\coursenum}{{CPSC 490}}
+\newcommand{\coursename}{{Senior Thesis}}
+\newcommand{\courseprof}{Dan Spielman}
+
+\lecturetitle{1}{Iterative Algorithms for Lipschitz Learning on Graphs}{Xiao Shi}{\today}
+
+\title{}
+\begin{abstract}
+This paper considers the problem of computing the Lex-Minimizer, where one is given a finite graph along with fixed values at some vertices and needs to compute a value assignment to the rest of the vertices such that the assignment lexicographically minimizes the infinity norm of the value differences across edges (in other words, to compute a value assignment that is as ``smooth'' as possible). This paper discusses the structural properties of the Lex-Minimizer, presents a few iterative algorithms which are based on these properties, and proves the convergence of these algorithms for computing the Lex-Minimizer.
+\end{abstract}
+\makeatletter
+\@setabstract
+\makeatother
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+We consider the \emph{Lipschitz extension problem} on finite undirected graphs. Consider a weighted undirected graph $G=(V,E,\ell)$ and values $\V{v_0}:T\mapsto \rea$ on a subset $T$ of its vertices. We only consider positive weights $\ell: E\mapsto \rea_+$ and view the weights as indications of lengths of edges--shorter lengths indicate greater similarity.
+
+Our goal is to assign values to every vertex $x\in V - T$ so that the values assigned (on all vertices) are as \emph{smooth} as possible across edges. We will define \emph{smoothness} precisely in later sections.
+
+Throughout this paper, let $n=\abs{V}$. As the vertices in $T$ has fixed values, we call them \emph{terminal} or \emph{boundary} vertices. Another way of looking at the terminal values is to view $\V{v_0}\in\rea^n$ as a function $\V{v_0}: V\mapsto \rea\cup \set{\perp}$, where $\V{v_0}(x) = \perp$ if and only if $x\notin T$. Given a vector $\V{v}: V\mapsto \rea$. We write $\V{v}|T = \V{v_0}|T$ say that $\V{v}$ \emph{extends} $\V{v_0}$ if for every $x\in T$, $\V{v}(x)=\V{v_0}(x)$. \\
+
+\noindent\textbf{Inf-Minimizers.}
+A minimal Lipschitz extension of $\V{v_0}$ is a vector $\V{v}: V\mapsto \rea$ that minimizes
+\begin{equation}\label{eq:infminobj}
+  \max_{(x,y)\in E} \paren{ \ell(x,y)}^{-1} \abs{\V{v}(x)-\V{v}(y)}
+\end{equation}
+subject to $\V{v}(x) = \V{v_0}(x)$ for all $x\in T$.
+
+As ~\eqref{eq:infminobj} is equivalent to the infinity norm of $\paren{ \ell(x,y)}^{-1} \abs{\V{v}(x)-\V{v}(y)}$ across edges, we call a vector $\V{v}$ that minimizes this objective an \emph{Inf-Minimizer}.\\
+
+\noindent\textbf{Lex-Minmizer.}
+Inf-minimizers are not unique, so among them, we seek vectors that minimizes the second-largest absolute value of $\paren{ \ell(x,y)}^{-1} \abs{\V{v}(x)-\V{v}(y)}$ across edges, and then the third-largest given that, and so on. This way we obtain an \emph{absolutely minimal Lipschitz extension} (AMLE) of $\V{v_0}$. We call such a vector $\V{v}^*$ the \emph{Lex-Minizer}, which we have proven to be unique~\cite{KRSS15}. \\
+
+In this paper, we discuss some structural properties of Lex-Minimizer in Section~\ref{sec:lexproperties}; we then present a few iterative algorithms to calculate the Lex-Minimizer in Section~\ref{sec:iteralgs}; finally, we prove the convergence of these algorithms in Sections~\ref{sec:iterlexconvunwtd} and ~\ref{sec:iterlexconv}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Properties of Lex-Minimizer}\label{sec:lexproperties}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+It turns out that the lex-minimizer has very nice structural properties, especially on uniformly weighted graphs.
+
+\subsection{Max-Min Gradient Averaging Property}
+
+\begin{definition}[Gradient due to an assignment]\label{def:grad}
+Given a vector $\V{v}: V\mapsto \rea \cup \set{\perp}$, $(x,y)\in E$, where $\V{v}(x)\neq \perp$ and $\V{v}(y)\neq\perp$. We define the gradient on $(x,y)$ due to $\V{v}$ to be
+$$\grad[\V{v}](x,y) = \frac{\V{v}(x)-\V{v}(y)}{\ell(x,y)}.$$
+\end{definition}
+Note that $\grad[\V{v}](x,y) = -\grad[\V{v}](y,x)$. We drop $[\V{v}]$ when the context is clear.
+
+We also define the gradient along a path $P = \path{p_1 \to p_2 \to \hdots \to p_k}$, where $p_i\in V$ and $(p_i, p_{i+1})\in E$, as $$\grad[\V{v}](P) = \frac{\V{v}(p_1) - \V{v}(p_k)}{\sum_{i=1}^{k-1}\ell(p_i, p_{i+1})}.$$ Note that $\grad[\V{v}]\paren{\path{p_1 \to p_2 \to \hdots \to p_k}} = -\grad[\V{v}]\paren{\path{p_k \to p_{k-1} \to \hdots \to p_1}}$.
+
+\begin{definition}[Max-min gradient averaging property]\label{def:maxmingradavgprop}
+The vector $\V{v}: V\mapsto \rea$ which extends $\V{v_0}$ satisfies max-min gradient averaging property if for every non-terminal vertex $x\in V-T$,
+\begin{equation}\label{eq:maxmingradavgprop}
+  \max_{(x,y)\in E}\grad[\V{v}](y,x) = -\min_{(x,y)\in E}\grad[\V{v}](y,x)
+\end{equation}
+\end{definition}
+
+\begin{theorem}\label{thm:lexmaxminavgprop}
+Given $(G, \V{v_0})$, the Lex-Minimizer $\V{v}^*$ which extends $\V{v_0}$ satisfies the max-min gradient averaging property. Moreover, it is the \textbf{unique} assignment extending $\V{v_0}$ that satisfies this property with respect to $(G, \V{v_0})$.
+\end{theorem}
+\begin{proof}
+See the proof of Theorem 3.10 in Appendix A.3 in ~\cite{KRSS15}.
+\end{proof}
+
+\begin{corollary}[For uniformly weighted graphs]\label{cor:lexunwtdprop}
+Given a \emph{uniformly} weighted graph $G(V,E,\ell)$ and $\V{v_0}$, (\ie, $\ell(e) = c$ for all $e\in E$, where $c$ is a postive constant,) the Lex-Minimizer $\V{v}^*$ which extends $\V{v_0}$ has the following property: for all $x\in G - T$,
+\begin{equation}\label{eq:lexunwtdprop}
+  \V{v}^*(x) = \frac{1}{2} \paren{ \max_{(x,y)\in E} \V{v}^*(y) + \min_{(x,z)\in E} \V{v}^*(z) }
+\end{equation}
+\end{corollary}
+
+\subsection{Linearity}
+\begin{theorem}[Linearity of Lex-Minimizers]\label{thm:lexlinearity}
+Given a graph $G$ and two sets of terminal values $\V{v_0}$ and $\V{\hat{v}_0}$, let $\V{v}^*$ be the Lex-Minimizer that extends $\V{v_0}$ and $\V{\hat{v}}^*$ be the Lex-Minimizer that extends $\V{\hat{v}_0}$, if $\V{v_0}$ and $\V{\hat{v}_0}$ satisfies $$\V{\hat{v}_0}(x) = a\V{v_0}(x) + b, \forall x\in T, a\in \rea, b\in \rea,$$ then for every vertex $y\in V$, $$\V{\hat{v}}^*(y) = a\V{v}^*(y) + b.$$
+\end{theorem}
+
+\begin{proof}
+Construct $\V{v}\in \rea^n$ such that for every vertex $y\in V$, $\V{v}(y) = a\V{v}^*(y) + b$. $\V{v}$ obviously extends $\V{v_0}$.
+
+For every non-terminal vertex $x\in V-T$,
+\begin{align*}
+ &\max_{(x,y)\in E}\grad[\V{v}](y,x) \\
+=&\max_{(x,y)\in E}\frac{\V{v}(y)-\V{v}(x)}{\ell(y,x)} \\
+=&\max_{(x,y)\in E}\frac{a\V{v}^*(y)+b-\paren{a\V{v}^*(x)+b}}{\ell(y,x)} \\
+=&a\max_{(x,y)\in E}\frac{\V{v}^*(y)-\V{v}^*(x)}{\ell(y,x)} \\
+=&a\max_{(x,y)\in E}\grad[\V{v}^*](y,x)
+\end{align*}
+
+Similarly, we can show that $$\min_{(x,y)\in E}\grad[\V{v}](y,x) = a\min_{(x,y)\in E}\grad[\V{v}^*](y,x).$$
+
+Since $\V{v}^*$ is a Lex-Minimizer, which must satisfy the max-min gradient averaging property: $\max_{(x,y)\in E}\grad[\V{v}^*](y,x) = -\min_{(x,y)\in E}\grad[\V{v}^*](y,x)$. Hence, $\max_{(x,y)\in E}\grad[\V{v}](y,x) = -\min_{(x,y)\in E}\grad[\V{v}](y,x)$, \ie, $\V{v}$ also satisfies the max-min gradient averaging property. By Theorem~\ref{thm:lexmaxminavgprop}, it must be the Lex-Minimizer that extends $\V{v_0}$. By uniqueness of the Lex-Minimizer, $\V{v} = \V{\hat{v}}^*$.
+
+\end{proof}
+
+
+\section{Iterative Algorithms for Computing Lex-Minimizer}\label{sec:iteralgs}
+Theorem~\ref{thm:lexmaxminavgprop} and Corollary ~\ref{cor:lexunwtdprop} naturally give rise to a few iterative algorithms for compute Lex-Minimizers.
+
+\subsection{IterLex for Uniformly Weighted Graphs}
+Initially assign a value (say $0$) for any vertex $u\notin T$, then simply iteratively take the average for the max and min neighbors until we get to an assignment with acceptable error (the termination criterion could be within absolute error $\epsilon$, or a $\epsilon$-approximation, etc.). More formally,
+see Algorithm ~\ref{alg:iterlexunwtd}.
+
+\begin{algorithm}
+    \caption{IterLex for Uniformly Weighted Graphs}
+    \label{alg:iterlexunwtd}
+    \begin{algorithmic}[1]
+        \State $\V{v_1}|T \gets \V{v_0}|T$ \Comment {shorthand for copying values for vertices in $T$}
+        \ForAll {$x \in V - T$}
+            \State $\V{v_1}(x) \gets c$
+        \EndFor \Comment{initial assignment, $c$ is a constant}
+        \State $t\gets 0$
+        \While {termination criterion is not met}
+            \State $\V{v_{t+1}}|T \gets \V{v_0}|T$
+            \ForAll {$x \in V - T$}
+                \State $\V{v_{t+1}}(x) = \frac{1}{2}\paren{\max_{(x,y)\in E} \V{v_t}(y) + \min_{(x,z)\in E} \V{v_t}(x)}$
+            \EndFor
+            \State $t\gets t+1$
+        \EndWhile
+    \end{algorithmic}
+\end{algorithm}
+
+\subsection{IterLex for General Graphs}
+Analogously for general graphs, we could take the weighted average of the max and min neighbors. However, Theorem~\ref{thm:lexmaxminavgprop} permits two methods of picking the max and min neighbors. As specified below, Version 1 selects the neighbors whose respective gradients to the current vertex are the maximum and mininum; Version 2 selects the \emph{pair} of neighbors whose gradient between them are the maximum.
+
+\begin{algorithm}
+    \caption{IterLex for General Graphs (Version 1)}
+    \label{alg:iterlex1}
+    \begin{algorithmic}[1]
+        \State $\V{v_1}|T \gets \V{v_0}|T$
+        \ForAll {$x \in V - T$}
+            \State $\V{v_1}(x) \gets c$
+        \EndFor \Comment{initial assignment, $c$ is a constant}
+        \State $t\gets 0$
+        \While {termination criterion is not met}
+            \State $\V{v_{t+1}}|T \gets \V{v_0}|T$
+            \ForAll {$x \in V - T$}
+                \State $y \gets \argmax_{(x,y)\in E}\grad[\V{v_t}](y,x)$
+                \State $z \gets \argmin_{(x,z)\in E}\grad[\V{v_t}](z,x)$
+                \State $\V{v_{t+1}}(x) \gets \nfrac{\paren{\ell(y,x)\V{v_t}(z) + \ell(z,x)\V{v_t}(y)}}{\paren{\ell(y,x)+\ell(z,x)}}$
+            \EndFor
+            \State $t\gets t+1$
+        \EndWhile
+    \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+    \caption{IterLex for General Graphs (Version 2)}
+    \label{alg:iterlex2}
+    \begin{algorithmic}[1]
+        \State $\V{v_1}|T \gets \V{v_0}|T$
+        \ForAll {$x \in V - T$}
+            \State $\V{v_1}(x) \gets c$
+        \EndFor \Comment{initial assignment, $c$ is a constant}
+        \State $t\gets 0$
+        \While {termination criterion is not met}
+            \State $\V{v_{t+1}}|T \gets \V{v_0}|T$
+            \ForAll {$x \in V - T$}
+                \State $(y,z) \gets \argmax_{(x,y)\in E, (x,z)\in E}\grad[\V{v_t}](y,z)$
+                \State $\V{v_{t+1}}(x) \gets \nfrac{\paren{\ell(y,x)\V{v_t}(z) + \ell(z,x)\V{v_t}(y)}}{\paren{\ell(y,x)+\ell(z,x)}}$
+            \EndFor
+            \State $t\gets t+1$
+        \EndWhile
+    \end{algorithmic}
+\end{algorithm}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Related Work}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Wide Usage of Lex-Minimizers and IterLex Algorithms}
+As Lex-Minimizers provide the ``smoothest'' extension, they are used in various areas such as image processing and machine learning (~\cite{GEL11}, ~\cite{ADE14}, ~\cite{EDLL14}). Some examples include image inpainting, image scaling, and cluster recognition.
+
+
+\subsection{Alternative Formulations}
+Lex-Minimizers have a lot of alternative formulations and related problems. It is the limit of the solutions to $p$-Laplacian minimization problems as $p\to \infty$, namely, the vectors that solve
+\begin{equation}\label{eq:plaplacian}
+  \min_{\V{v}: V\mapsto \rea, \V{v}|_T = \V{v_0}|_T} \sum_{(x,y)\in E} \paren{\ell(x,y)}^{-p}\abs{\V{v}(x)-\V{v}(y)}^p.
+\end{equation}
+
+Given that all weights are positive, ~\eqref{eq:plaplacian}$\geq 0$. Zero is actually achievable by solutions to $p$-harmonic functions. (See ~\cite{And09} for details.) It follows that the Lex-Minimizer is also the limit of the solutions to $p$-harmonic functions.
+
+The continuous counterpart of Lex-Minimization on finite graphs is infinity-Laplacian ($\Delta_\infty$) equations. ~\cite{PSSW08} studies the $\infty$-Laplacians and relate them to tug-of-war games. ~\cite{Obe05} discretizes $\Delta_\infty$ as AMLE (\ie, Lex-Minimizers) and proves that the solutions of AMLE converges to the solution of $\infty$-Laplacians as the discretization becomes more and more granular. Lex-Minimizers are also closely related to the Dirichlet problems, simple stochastic games (also affectionately known as Anne Condon's games in the distributed systems community)... the list goes on.
+
+\subsection{Related Results}
+Before the algorithm that ~\cite{KRSS15} proposed, the community has been using the IterLex algorithms, often without careful analysis. In fact, their convergence was an open question. The main contributions of this paper is a proof of convergence of IterLex Algorithms~\ref{alg:iterlexunwtd} and ~\ref{alg:iterlex2}.
+
+Andersson in his Master Thesis~\cite{And09} formulated Lex-Minimizer as the limit of solutions to $p$-harmonic functions. He presented an iterative algorithm for $p$-harmonic functions on uniformly weighted graphs, and proved its convergence. Unfortunately his proof breaks down when $p=\infty$.
+
+~\cite{LLPSU99} formulated the Lex-Minimization problem as calculating Richman costs. This is a special case of the Lipschitz extension problem, as it considers directed (but unweighted) graphs and has only two terminals. Lazarus et al. proved convergence of the iterative algorithm and showed an exponential rate of convergence.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Convergence of IterLex (on Uniformly Weighted Graphs)}\label{sec:iterlexconvunwtd}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In order to show the convergence of Algorithm~\ref{alg:iterlexunwtd}, we formulate the original problem and the algorithm slightly differently.
+
+Given undirected graph $G(V,E,\ell)$ that is uniformly weighted, let $\calH(V)$ be the Hilbert space of all real valued functions (assignments) on the vertices of the graph, \ie, each function $\V{v}\in\calH(V): V \mapsto \rea$ assigns a real value $\V{v}(x)$ to each vertex $x\in V$.
+
+\textbf{The Set of Possible Assignments.}
+Consider the set of potential assignments $$K=\set{\V{v}\in\calH(V) : \V{v}|_T = \V{v_0}|_T; \forall x\in V, m\leq \V{v}(x)\leq M},$$ 
+where $m=\min_{x\in T}\V{v_0}(x)$ and $M=\max_{x\in T}\V{v_0}(x)$.
+
+$K$ does not include all possible assignment that extends $\V{v_0}$, but every assignment in $K$ extends $\V{v_0}$. Furthermore, it follows from Theorem~\ref{thm:lexmaxminavgprop} and the iteration procedure in Algorithm~\ref{alg:iterlexunwtd} that for any vertex $x\in V$, the value of $x$ is always contained in $[m,M]$. Therefore, $\forall t\geq 0, \V{v_t}\in K$.
+
+If we identify $\calH(V)$ to be $\rea^n$, we notice that $K\subset \calH(V)$ is a convex and compact subset of $\rea^n$.
+
+\textbf{Update Functions.}
+We then consider the iterations in Algorithm~\ref{alg:iterlexunwtd} to be update functions on assignments $\V{v_t}$.
+
+The \emph{global update function} $F: K\mapsto K$ is thus
+\begin{equation*}
+F(\V{v})(x) =  \begin{cases}
+\frac{1}{2}\paren{\max_{(x,y)\in E}\V{v}(y)+\min_{(x,z)\in E}\V{v}(z)} &\text{if $x\notin T$;} \\
+\V{v}(x) &\text{if $x\in T$.}
+\end{cases}
+\end{equation*}
+
+\textit{Composition of Local Update Functions.}
+Perceivably, we may choose not to update vertices altogether based on their values from the previous iteration. Instead, we can update the vertices one by one in each iteration.
+
+Consider $F_i: K\mapsto K$, the local update function on vertex $i$, which takes the average of $i$'s max and min neighbors and leaves values at other vertices intact:
+\begin{equation*}
+F_i(\V{v})(x) = \begin{cases}
+\frac{1}{2}\paren{\max_{(x,y)\in E}\V{v}(y)+\min_{(x,z)\in E}\V{v}(z)} &\text{if $x = i$ and 
+$x\notin T$;}\\
+\V{v}(x) &\text{otherwise.}
+\end{cases}
+\end{equation*}
+
+Given a permutation of the vertices $\pi\in S_n$, where $S_n$ is the symmetric group of the $n$ vertices. Then the composition of $n$ local update functions can be a candidate for our update function: $$F^\pi(\V{v}) = F_{\pi(n)}\circ F_{\pi(n-1)} \circ \hdots \circ F_{\pi(1)}(\V{v}).$$
+
+Note that the global update function is not the same as the composition of local update functions, as the max-min neighbors might change as we apply the local updates one by one.
+
+\textit{Lazy Update Function.}
+Analogous to the lazy version of random walk, we can define a lazy version of the global update function $F^\alpha: K\mapsto K$ with parameter $0 \leq \alpha < 1$:
+\begin{equation*}
+F^\alpha(\V{v})(x) =  \begin{cases}
+\alpha \V{v}(x) + \frac{\paren{1-\alpha}}{2}\paren{\max_{(x,y)\in E}\V{v}(y)+\min_{(x,z)\in E}\V{v}(z)} &\text{if $x\notin T$;} \\
+\V{v}(x) &\text{if $x\in T$.}
+\end{cases}
+\end{equation*}
+
+Note that when $\alpha=0$, $F^\alpha$ is exactly the same as $F$.
+
+\textbf{Lex-Minimizer as Fixed Point.}
+Any fixed point $\V{v}^\dagger$ of the global update function $F$ (\ie, $\V{v}^\dagger\in K$ that satisfies $\V{v}^\dagger = F(\V{v}^\dagger)$) corresponds exactly to the Lex-Minimizer as it satisfies the property in Corollary~\ref{cor:lexunwtdprop}. From the existence and uniqueness of the Lex-Minimizer, the existence and uniqueness of fixed point follows. Since $\V{v}^\dagger = \V{v}^*$, we refer to the fixed point as $\V{v}^*$ as well.
+
+We can also show the existence of the fixed point using Brouwer's Fixed Point Theorem: every continuous function from a convex compact subset $S$ of a Euclidean space to $S$ itself has a fixed point. The map $\V{v}\mapsto F(\V{v})$ is continuous (See Section~\ref{sec:continuity}) and is from the convex compact subset $K\subset \rea^n$ to itself, hence $F$ has a fixed point. However, Brouwer's Fixed Point Theorem does not provide a construction process nor any indication of convergence using fixed point iteration.
+
+\subsection{Continuity}\label{sec:continuity}
+We now prove two important properties of the global update function--continuity and monotonicity--in order to show convergence of Algorithm~\ref{alg:iterlexunwtd}.
+
+\begin{lemma}[Continuity of the global update function]\label{lem:continuity}
+The global update function $F$ is continuous.
+\end{lemma}
+\begin{proof}
+Suppose we have $\V{v}, \V{\hat{v}}\in K$, such that $\norm{\V{v}-\V{\hat{v}}}_{\infty}\leq \epsilon$, \ie, for all $x\in V$, $\abs{\V{v}(x)-\V{\hat{v}}(x)} \leq \epsilon$.
+
+Since $\V{v}, \V{\hat{v}}\in K$, $\V{v}|_T = \V{v_0}|_T = \V{\hat{v}}|_T$.
+
+For each vertex $x\in V-T$, even though $x$ may have different max (resp. min) neighbors in assignments $\V{v}$ and $\V{\hat{v}}$, the values of its max (resp. min) neighbors cannot be more than $\epsilon$ apart. Hence $\abs{F(\V{v})(x)-F(\V{\hat{v}})(x)} \leq \epsilon$. %TODO: more detailed argument here?
+
+Thus the global update function is actually uniformly continuous:
+\[ \norm{F(\V{v})-F(\V{\hat{v}})}_{\infty} = \max_{x\in V} \abs{F(\V{v})(x)-F(\V{\hat{v}})(x)} \leq \epsilon. \]
+\end{proof}
+
+\begin{corollary}[Continuity of variants of update functions]\label{cor:continuity}
+The local update function $F_i$, the composition of local update functions $F^\pi$, and the lazy global update function are all continuous.
+\end{corollary}
+
+\begin{proof}
+This follows from the same argument as in Lemma~\ref{lem:continuity}. Again assumee we have $\V{v}, \V{\hat{v}}\in K$, such that $\norm{\V{v}-\V{\hat{v}}}_{\infty}\leq \epsilon$.
+
+For the local update function, apply the argument in Lemma~\ref{lem:continuity} to the vertex $i$. For the rest of the vertices, $\abs{F(\V{v})(x)-F(\V{\hat{v}})(x)} \leq \epsilon$ follows directly from assumption.
+
+Since $F^\pi$ is a composition of continuous functions, it is itself continous.
+
+For the lazy version, we obtain that for $x\in V-T$, $$\abs{F(\V{v})(x)-F(\V{\hat{v}})(x)} \leq (1-\alpha)\epsilon.$$ Since $\alpha\in [0,1)$, $$ \norm{F(\V{v})-F(\V{\hat{v}})}_{\infty} = \max_{x\in V} \abs{F(\V{v})(x)-F(\V{\hat{v}})(x)} \leq \epsilon.$$
+
+\end{proof}
+
+\subsection{Monotonicity}
+\begin{lemma}[Monotonicity of the global update function]\label{lem:monotonicity}
+If $\V{v}, \V{\hat{v}}\in K$ satisfy $\V{v}(x)\leq \V{\hat{v}}(x)$ for all $x\in V$, then $F(\V{v})(x) \leq F(\V{\hat{v}})(x)$ for all $x\in V$.
+\end{lemma}
+\begin{proof}
+First note that terminal nodes always satisfy this property: if $x\in T$, by definition, $\V{v}(x) = \V{\hat{v}}(x) = \V{v_0}(x)$ and $F(\V{v})(x) = F(\V{\hat{v}})(x) = \V{v_0}(x)$.
+
+Now we consider any non-terminal vertex $x\in V-T$.
+
+Let $x^{\V{v}}_{\max}$ be $x$'s max-neighbor in $\V{v}$, \ie, $$x^{\V{v}}_{\max} = \argmax_{(x,y)\in E}\V{v}(y).$$ We then have
+$$\max_{(x,y)\in E}\V{v}(y) = \V{v}(x^{\V{v}}_{\max}) \leq \V{\hat{v}}(x^{\V{v}}_{\max}) \leq \max_{(x,y)\in E} \V{\hat{v}}(y).$$
+
+Similarly, let $x^{\V{\hat{v}}}_{\min}$ be $x$'s min-neighbor in $\V{\hat{v}}$, \ie, $$x^{\V{\hat{v}}}_{\min} = \argmin_{(x,z)\in E}\V{\hat{v}}(z).$$ We then have
+$$\min_{(x,z)\in E}\V{v}(z) \leq \V{v}(x^{\V{\hat{v}}}_{\min}) \leq \V{\hat{v}}(x^{\V{\hat{v}}}_{\min}) = \min_{(x,z)\in E} \V{\hat{v}}(z).$$
+
+Therefore, $$ F(\V{v})(x) = \frac{1}{2}\paren{\max_{(x,y)\in E}\V{v}(y)+\min_{(x,z)\in E}\V{v}(z)} \leq \frac{1}{2}\paren{\max_{(x,y)\in E}\V{\hat{v}}(y)+\min_{(x,z)\in E}\V{\hat{v}}(z)} = F(\V{\hat{v}})(x).$$
+
+\end{proof}
+
+It follows from the same line of reasoning that the other variants of update functions are also monotonic.
+
+\begin{corollary}[Monotonicity of variants of update functions]\label{cor:monotonicity}
+The local update function $F_i$, the composition of local update functions $F^\pi$, and the lazy global update function are all monotonic.
+\end{corollary}
+
+Note that we do not have \emph{strict} monotonicity, \ie, if $f$ and $g$ are two elements in $K$ such that $f(u) < g(u)$ for all $u\in V - T$, we do \emph{not} have $F(f)(u) < F(g)(u)$. The simplest counter example would be a path graph with $3$ vertices, the two vertices on the end are terminals. Applying the update function will always give you the same value for the single non-terminal node, which is the average of the two terminals values. Fortunately, we do not need strict monotonicity to argue that Algorithm~\ref{alg:iterlexunwtd} converges to the Lex-Minimizer.
+
+\subsection{Proof of Convergence}
+Consider the sequence of assignments $\set{\V{v_t}}$ we obtain by running Algorithm~\ref{alg:iterlexunwtd}.
+
+Initially, we start with $\V{v_1}$. We set the terminal values accordingly: $\V{v_1}|_T \gets \V{v_0}|_T$. We set all the non-terminal vertices to be $c \gets m = \min_{x\in T}\V{v_0}(x)$, where the constant $c$ is defined in Algorithm~\ref{alg:iterlexunwtd} and $m$ is the minimum among all the terminal values. We then keep applying the global update function:
+\begin{align*}
+\V{v_2} &= F(\V{v_1}) \\
+\V{v_3} &= F\paren{F(\V{v_1})} = F(\V{v_2}) \\
+\hdots \\
+\V{v_t} &= F\paren{\V{v_{t-1}}} \\
+\hdots \\
+\end{align*}
+
+\begin{definition}[Partial order on the set $K$]
+Given $\V{v},\V{\hat{v}}\in K$, we write $\V{v}\leq \V{\hat{v}}$ if and only if 
+$\forall x\in V, \V{v}(x)\leq \V{\hat{v}}(x)$.
+\end{definition}
+
+\begin{remark}\label{remark:minimuminK}
+Given this partial order, note that $\V{v_1}$ is the ``minimal'' assignment in the set $K$, \ie, $\forall \V{v}\in K$, we have $\V{v_1}\leq \V{v}$.
+\end{remark}
+
+\begin{lemma}[Boundedness of $\set{\V{v_t}}$]\label{lem:bounded}
+$\forall t\geq 1$, $\V{v_t}\leq \V{v}^*$, where $\V{v}^*=F(\V{v}^*)$ is the Lex-Minimizer.
+\end{lemma}
+\begin{proof}
+We show this by induction on $t$. The base case $\V{v_1}\leq \V{v}^*$ follows from Remark~\ref{remark:minimuminK}. Now assume $\V{v_{t-1}}\leq \V{v}^*$. By Lemma~\ref{lem:monotonicity}, $F(\V{v_{t-1}}) \leq F(\V{v}^*)$. Hence, $$\V{v_t} = F(\V{v_{t-1}}) \leq F(\V{v}^*) = \V{v}^*. $$
+\end{proof}
+
+\begin{lemma}[Monotonicity of $\set{\V{v_t}}$]\label{lem:monotoneseq}
+$\forall t > 1$, $\V{v_{t-1}}\leq \V{v_{t}}$.
+\end{lemma}
+\begin{proof}
+We again induct on $t$. The base case $t=2$, $\V{v_1}\leq \V{v_2}$ follows from Remark~\ref{remark:minimuminK}. Now assume for $t>2$, $\V{v_{t-2}}\leq \V{v_{t-1}}$. By Lemma~\ref{lem:monotonicity}, $F(\V{v_{t-2}}) \leq F(\V{v_{t-1}})$. Hence,
+$$ \V{v_{t-1}} = F(\V{v_{t-2}}) \leq F(\V{v_{t-1}}) = \V{v_{t}}.$$
+\end{proof}
+
+\begin{theorem}[Convergence of IterLex]\label{thm:convergence}
+$\lim_{t\to \infty} \V{v_t} \to \V{v}^*$.
+\end{theorem}
+\begin{proof}
+Lemma~\ref{lem:bounded} and Lemma~\ref{lem:monotoneseq} state that for any vertex $x\in V$, the sequence $\set{\V{v_t}(x)}$ is monotonically non-decreasing and upper-bounded by $\V{v}^*(x)$. Hence, by the Monotone Convergence Theorem (of real numbers), the sequence $\set{\V{v_t}(x)}$ converges to $\sup_{t\geq 1}\set{\V{v_t}(x)}$. Therefore the sequence $\set{\V{v_t}}$ \emph{pointwise} converges to a limit $\V{\tilde{v}}$, where $\V{\tilde{v}}(x) = \sup_{t\geq 1}\set{\V{v_t}(x)}$ for all $x\in V$.
+
+Now we show that the limit $\V{\tilde{v}}=\V{v}^*$, the Lex-Minimizer.
+
+Since $F(\cdot)$ is continuous on $K$ and $K\subset R^n$ is Hausdorff, we can interchange limit and function application. Hence, 
+\[ F(\V{\tilde{v}}) = F(\lim_{t\to\infty}\V{v_t}) = \lim_{t\to\infty}F(\V{v_t}) = \lim_{t\to\infty}\V{v_{t+1}} = \V{\tilde{v}}. \]
+
+$\V{\tilde{v}}$ is a fixed point of $F$, but since we know the unique fixed point is the Lex-Minimizer, we must have $\V{\tilde{v}}=\V{v}^*$.
+\end{proof}
+This tells us that Algorithm~\ref{alg:iterlexunwtd} \emph{pointwise} converges to the Lex-Minimizer $\V{v}^*$ in the limit.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Convergence of IterLex (on General Graphs)}\label{sec:iterlexconv}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The convergence of Algorithm~\ref{alg:iterlex2} follows from a similar argument. However, the argument for the continuity and monotonicity is more complicated. 
+
+Now we consider an weighted undirected graph $G(V,E,\ell)$, where $\ell:E\mapsto \rea_+$, and an initial set of terminal values $\V{v_0}: V\mapsto \rea^n\cup\set{\perp}$. We still let the set of possible assignments be $K$, and the Lex-Minimizer be $\V{v}^*$.
+\begin{definition}[Weighted average of two neighbors]
+For any non-terminal vertex $x\in V-T$ and two of its neighbors $y$ and $z$, \ie, $(x,y)\in E, (x,z)\in E$, we define the weighted average of the two neighbors in assignment $\V{v}$ as $$w_{\V{v}}(y,z)\triangleq \frac{\ell(x,y)\V{v}(z) + \ell(x,z)\V{v}(y)}{\ell(x,y)+\ell(x,z)}.$$ We drop the subscript when the context is clear.
+\end{definition}
+
+\begin{remark}
+$\forall \V{v}\in K, x\in V, (x,y)\in E, (x,z)\in E$, $w_{\V{v}}(z,y) = w_{\V{v}}(y,z)$.
+\end{remark}
+
+\begin{remark}\label{rem:gradtowtdavg}
+Consider any assignment $\V{v}\in K$, any vertex $x\in V-T$ and its three neighbors $u,y,z$. If $\grad[\V{v}]\paren{\path{y \to x \to u}} \leq \grad[\V{v}]\paren{\path{y \to x \to z}}$, or equivalently $\grad[\V{v}]\paren{\path{u \to x\to y}} \geq \grad[\V{v}]\paren{\path{z \to x \to y}}$, then $w(y,u) \geq w(y,z)$.
+\end{remark}
+
+\begin{definition}[Weighted global update function]$$\tilde{F}(\V{v})(x) = w_{\V{v}}(y,z) \text{, where }(y,z)=\argmax_{(x,y)\in E, (x,z)\in E}\grad[\V{v}]\paren{\path{y\to x\to z}}.$$
+\end{definition}
+
+\subsection{Continuity}
+\begin{lemma}[Continuity of weighted global update function]\label{lem:wtdcontinuity}
+The weighted global update function $\tilde{F}$ is continuous.
+\end{lemma}
+\begin{proof}
+Suppose we have $\V{v}, \V{\hat{v}}\in K$, such that $\norm{\V{v}-\V{\hat{v}}}_{\infty}\leq \epsilon$, \ie, for all $x\in V$, $\abs{\V{v}(x)-\V{\hat{v}}(x)} \leq \epsilon$. Consider any non-terminal vertex $x\in V-T$. We first observe that if vertices $y$ and $z$ are the neighbors of $x$, we have
+\begin{equation}\label{eq:valueobs}
+\abs{w_{\V{v}}(y,z)-w_{\V{\hat{v}}}(y,z)} \leq \frac{\ell(x,y)\abs{\V{v}(z)-\V{\hat{v}}(z)} + \ell(x,z)\abs{\V{v}(y)-\V{\hat{v}}(y)}}{\ell(x,y)+\ell(x,z)} \leq \epsilon.
+\end{equation}
+
+In this proof, we use $\grad[\cdot](y,z)$ solely in the context of (and therefore depends on) $x$, \ie, for any $\V{u}\in K$, we overload the notation $$\grad[\V{u}](y,z) \triangleq \grad[\V{u}](\path{y\to x\to z}) = \frac{\V{u}(y)-\V{u}(z)}{\ell(x,y)+\ell(x,z)}.$$
+
+We then further observe that $$\abs{\grad[\V{v}](y,z)-\grad[\V{\hat{v}}](y,z)} \leq \frac{\abs{\V{v}(z)-\V{\hat{v}}(z)} + \abs{\V{v}(y)-\V{\hat{v}}(y)}}{\ell(x,y)+\ell(x,z)} \leq \frac{2\epsilon}{\ell(x,y)+\ell(x,z)}$$. We write the righthand side as $\Delta_{y,z}$ for short.
+
+Let vertices $\alpha$ and $\beta$ be the neighbors of $x$ that maximize $\grad[\V{v}](\beta,\alpha)$; let vertices $\gamma$ and $\delta$ be the neighbors of $x$ that maximize $\grad[\V{\hat{v}}](\delta,\gamma)$.
+
+% Therefore, $\grad[\V{v}](\beta,\alpha)\geq\grad[\V{v}](\delta,\gamma)$ and $\grad[\V{\hat{v}}](\delta,\gamma) \geq \grad[\V{\hat{v}}](\beta, \alpha)$.
+
+By our previous observation,
+\begin{equation}\label{eq:deltagamma}
+\abs{\grad[\V{v}](\delta,\gamma)-\grad[\V{\hat{v}}](\delta,\gamma)}\leq\frac{2\epsilon}{\ell(x,\delta)+\ell(x,\gamma)} = \Delta_{\delta,\gamma},
+\end{equation}
+\begin{equation}\label{eq:betaalpha}
+\abs{\grad[\V{v}](\beta,\alpha)-\grad[\V{\hat{v}}](\beta,\alpha)}\leq\frac{2\epsilon}{\ell(x,\beta)+\ell(x,\alpha)} = \Delta_{\beta,\alpha}.
+\end{equation}
+
+Therefore,
+\begin{align*}
+&\grad[\V{\hat{v}}](\delta,\gamma) \\
+\leq& \grad[\V{v}](\delta,\gamma)+\Delta_{\delta,\gamma} &\paren{\text{By ~\eqref{eq:deltagamma}}}\\
+\leq& \grad[\V{v}](\beta,\alpha)+\Delta_{\delta,\gamma} &\paren{\text{Since }(\beta,\alpha)\text{ maximize }\grad[\V{v}](\cdot,\cdot)}\\
+\leq& \grad[\V{\hat{v}}](\beta,\alpha) + \Delta_{\beta,\alpha} + \Delta_{\delta,\gamma} &\paren{\text{By ~\eqref{eq:betaalpha}}}
+\end{align*}
+
+Hence
+\begin{equation}\label{eq:gradientrelation}
+\grad[\V{\hat{v}}](\beta,\alpha)\leq \grad[\V{\hat{v}}](\delta,\gamma) \leq \grad[\V{\hat{v}}](\beta,\alpha) + \Delta_{\beta,\alpha} + \Delta_{\delta,\gamma}.
+\end{equation}
+
+Now we want to relate their weighted averages. Recall that $$w_{\V{\hat{v}}}(\gamma,\delta) = \V{\hat{v}}(\gamma) + \grad[\V{\hat{v}}](\delta,\gamma)\cdot\ell(\gamma,x) = \V{\hat{v}}(\delta) - \grad[\V{\hat{v}}](\delta,\gamma)\cdot\ell(\delta,x).$$
+
+% need this
+Since $\grad[\V{\hat{v}}](\delta,\gamma) \geq \grad[\V{\hat{v}}](\beta,\gamma)$, we have
+\begin{equation}\label{eq:upperboundvhatbeta}
+\begin{split}
+\V{\hat{v}}(\beta)
+=& \V{\hat{v}}(\gamma) + \grad[\V{\hat{v}}](\beta,\gamma)\cdot \paren{\ell(\beta,x)+\ell(\gamma,x)} \\
+\leq& \V{\hat{v}}(\gamma) + \grad[\V{\hat{v}}](\delta,\gamma) \cdot \paren{\ell(\beta,x)+\ell(\gamma,x)} \\
+=& w_{\V{\hat{v}}}(\gamma,\delta) + \grad[\V{\hat{v}}](\delta,\gamma) \cdot \ell(\beta,x).
+\end{split}
+\end{equation}
+
+Since $\grad[\V{\hat{v}}](\delta,\gamma) \geq \grad[\V{\hat{v}}](\delta,\alpha)$, we have
+\begin{equation}\label{eq:lowerboundvhatalpha}
+\begin{split}
+\V{\hat{v}}(\alpha)
+=& \V{\hat{v}}(\delta) - \grad[\V{\hat{v}}](\delta,\alpha)\cdot\paren{\ell(\alpha,x)+\ell(\delta,x)} \\
+\geq&  \V{\hat{v}}(\delta) - \grad[\V{\hat{v}}](\delta,\gamma)\cdot\paren{\ell(\alpha,x)+\ell(\delta,x)} \\
+=& w_{\V{\hat{v}}}(\gamma,\delta) -\grad[\V{\hat{v}}](\delta,\gamma)\cdot\ell(\alpha,x).
+\end{split}
+\end{equation}
+
+Therefore,
+\begin{align*}
+w_{\V{\hat{v}}}(\alpha,\beta) =& \V{\hat{v}}(\beta) - \grad[\V{\hat{v}}](\beta,\alpha)\cdot\ell(\beta,x) \\
+\leq& w_{\V{\hat{v}}}(\gamma,\delta) + \grad[\V{\hat{v}}](\delta,\gamma) \cdot \ell(\beta,x) - \grad[\V{\hat{v}}](\beta,\alpha)\cdot\ell(\beta,x) &\paren{\text{By~\eqref{eq:upperboundvhatbeta}}}\\
+\leq& w_{\V{\hat{v}}}(\gamma,\delta) + (\Delta_{\beta,\alpha}+\Delta_{\delta,\gamma})\cdot\ell(\beta,x). &\paren{\text{By~\eqref{eq:gradientrelation}}}
+\end{align*}
+
+Similarly, we obtain a lower bound,
+\begin{align*}
+w_{\V{\hat{v}}}(\alpha,\beta) =& \V{\hat{v}}(\alpha) + \grad[\V{\hat{v}}](\beta,\alpha)\cdot\ell(\alpha,x) \\
+\geq& w_{\V{\hat{v}}}(\gamma,\delta) - \grad[\V{\hat{v}}](\delta,\gamma)\cdot\ell(\alpha,x) + \grad[\V{\hat{v}}](\beta,\alpha)\cdot\ell(\alpha,x) &\paren{\text{By~\eqref{eq:lowerboundvhatalpha}}}  \\
+\geq&  w_{\V{\hat{v}}}(\gamma,\delta) - (\Delta_{\beta,\alpha}+\Delta_{\delta,\gamma})\cdot\ell(\alpha,x). &\paren{\text{By~\eqref{eq:gradientrelation}}}
+\end{align*}
+
+Let $\ell_{\min} = \min_{e\in E}\ell(e)$ and $\ell_{\max} = \max_{e\in E}\ell(e)$. As the graph $G$ is fixed, $\ell_{\min}$ and $\ell_{\max}$ can be considered as constants. Then we have
+\begin{equation}\label{eq:valuebound}
+\begin{split}
+&\abs{w_{\V{\hat{v}}}(\gamma,\delta) - w_{\V{\hat{v}}}(\alpha,\beta)} \\
+\leq& (\Delta_{\beta,\alpha}+\Delta_{\delta,\gamma})\cdot\max\set{\ell(\alpha,x), \ell(\beta,x)} \\
+=& \paren{\frac{2\epsilon}{\ell(x,\beta)+\ell(x,\alpha)}+\frac{2\epsilon}{\ell(x,\delta)+\ell(x,\gamma)}}\cdot\max\set{\ell(\alpha,x), \ell(\beta,x)}\\
+\leq& \paren{\frac{2\epsilon}{\ell_{\min}+\ell_{\min}}+\frac{2\epsilon}{\ell_{\min}+\ell_{\min}}}\cdot\ell_{\max} \\
+\leq& \frac{2\ell_{\max}}{\ell_{\min}}\cdot\epsilon.
+\end{split}
+\end{equation}
+
+It follows that
+\begin{align*}
+& \abs{\tilde{F}(\V{v})(x)-\tilde{F}(\V{\hat{v}})(x)} \\
+\leq& \abs{w_{\V{v}}(\beta,\alpha) - w_{\V{\hat{v}}}(\delta,\gamma)} \\
+\leq& \abs{w_{\V{v}}(\beta,\alpha) - w_{\V{\hat{v}}}(\beta,\alpha)} + \abs{w_{\V{\hat{v}}}(\beta,\alpha) - w_{\V{\hat{v}}}(\delta,\gamma)} &\paren{\text{triangular inequality}} \\
+\leq& \epsilon + \frac{2\ell_{\max}}{\ell_{\min}}\cdot\epsilon &\paren{\text{By~\eqref{eq:valueobs} and ~\eqref{eq:valuebound}}}\\
+=& \paren{1+\frac{2\ell_{\max}}{\ell_{\min}}}\cdot\epsilon.
+\end{align*}
+
+Therefore,
+$$\norm{\tilde{F}(\V{v})-\tilde{F}(\V{\hat{v}})}_{\infty} = \max_{x\in V} \abs{\tilde{F}(\V{v})(x)-\tilde{F}(\V{\hat{v}})(x)} \leq \paren{1+\frac{2\ell_{\max}}{\ell_{\min}}}\cdot\epsilon.$$
+
+$\tilde{F}$ is continuous.
+
+\end{proof}
+
+\subsection{Monotonicity}
+\begin{lemma}[Monotonicity of weighted global update function]\label{lem:wtdmonotonicity}
+If $\V{v}, \V{\hat{v}}\in K$ satisfy $\V{v}(x) \geq \V{\hat{v}}(x)$ for all $x\in V$, then $\tilde{F}(\V{v})(x) \geq \tilde{F}(\V{\hat{v}})(x)$ for all $x\in V$.
+\end{lemma}
+\begin{proof}
+Consider any non-terminal vertex $x\in V-T$.
+
+We again use overload the notation $\grad[\cdot](\cdot,\cdot)$, \ie, for any $\V{u}\in K$ and $x$'s neighbors $y$ and $z$, $$\grad[\V{u}](y,z) \triangleq \grad[\V{u}](\path{y\to x\to z}) = \frac{\V{u}(y)-\V{u}(z)}{\ell(x,y)+\ell(x,z)}.$$
+
+Let vertices $\alpha$ and $\beta$ be the neighbors of $x$ that maximize $\grad[\V{v}](\beta,\alpha)$; let vertices $\gamma$ and $\delta$ be the neighbors of $x$ that maximize $\grad[\V{\hat{v}}](\delta,\gamma)$. Therefore, $\V{v}(\beta)\geq\V{v}(\alpha)$, $\V{\hat{v}}(\delta)\geq\V{\hat{v}}(\gamma)$, $\grad[\V{v}](\delta, \alpha)\leq \grad[\V{v}](\beta,\alpha)$, and $\grad[\V{\hat{v}}](\delta,\alpha) \leq \grad[\V{\hat{v}}](\delta,\gamma)$.
+
+\begin{align*}
+&\tilde{F}(\V{v})(x)\\
+=&w_{\V{v}}(\beta, \alpha) \\
+\geq & w_{\V{v}}(\delta, \alpha) &\paren{\text{by Remark~\ref{rem:gradtowtdavg} given } \grad[\V{v}](\delta, \alpha)\leq \grad[\V{v}](\beta,\alpha)} \\
+=&\frac{\ell(\delta,x)\V{v}(\alpha)+\ell(\alpha,x)\V{v}(\delta)}{\ell(\delta,x)+\ell(\alpha,x)} \\
+\geq&\frac{\ell(\delta,x)\V{\hat{v}}(\alpha)+\ell(\alpha,x)\V{\hat{v}}(\delta)}{\ell(\delta,x)+\ell(\alpha,x)} & \paren{\V{v}(\alpha)\geq\V{\hat{v}}(\alpha), \V{v}(\delta)\geq\V{\hat{v}}(\delta), \ell(\cdot, \cdot)>0} \\
+=&w_{\V{\hat{v}}}(\delta,\alpha)\\
+\geq& w_{\V{\hat{v}}}(\delta,\gamma) &\paren{\text{by Remark~\ref{rem:gradtowtdavg} given } \grad[\V{\hat{v}}](\delta,\alpha) \leq \grad[\V{\hat{v}}](\delta,\gamma)} \\
+=& \tilde{F}(\V{\hat{v}})(x)
+\end{align*}
+
+%TODO: note alg2 is not monotonic.
+
+\end{proof}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Future Directions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Rate of Convergence}\label{sec:rateofconv}
+\subsubsection{Path Graphs}
+Using spectral methods, without much effort, one can show that if $G$ is an uniformly weighted path graph $P_n$, then $$\norm{\V{v_t}-\V{v}^*}\leq(1-\lambda)^t\norm{\V{v_1}-\V{v}^*}\approx e^{-\lambda t}\norm{\V{v_1}-\V{v}^*},$$ where $\lambda = 1-\cos(\nfrac{\pi}{n-1})$ is the spectral gap of the adjacency matrix $\nfrac{1}{2}\V{A}_{P_{n-2}}$.
+
+Therefore, to get $\norm{\V{v_t}-\V{v}^*}\leq \epsilon\norm{\V{v_0}-\V{v}^*}$, simply require $t\geq \frac{1}{\lambda}\log(\nfrac{1}{\epsilon})$.
+
+\subsubsection{General Graphs}
+Although the IterLex algorithms might not be as fast as the ones presented in ~\cite{KRSS15}, their programming complexity is much lower. It would be very nice to obtain a theoretical bound for the rate of convergence in the general case.
+
+\subsection{Bounding Errors}
+One way to exploit the monotonicity of the update functions is using it to estimate or bound the error $\norm{\V{v_t}-\V{v}^*}$.
+
+It follows from the above sections that given an assignment $\V{v}\in K$ and any vertex $x\in V$, we have $\abs{F(\V{v})(x) - \V{v}^*(x)} \geq \abs{F(\V{v})(x)-\V{v}(x)}$, a lower bound on the error. An upper bound would be very useful.
+
+Another possible way to exploit monotonicity is approaching $\V{v}^*$ from both above and below. Specifically, when running Algorithm~\ref{alg:iterlexunwtd}, concurrently run it on another set of assignments $\V{v^\prime_t}$, where $\V{v_1^\prime}$ is obtained by setting $c\gets M = \max_{x\in T}\V{v_0}(x)$. It's easy to show that $\set{\V{v_t^\prime}}$ is monotonically non-increasing and converges to $\V{v}^*$. Therefore we have $\V{v_t}\leq \V{v}^* \leq \V{v_t^\prime}$ for every $t$. The maximum error is then bounded by $\norm{\V{v_t^\prime}-\V{v_t}}_\infty$.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Acknowledgment}\label{sec:acknowledgment}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+I am indebted to my advisor Prof. Dan Spielman for his insights, patience, and support. Without him, this work would not have been possible. I would also like to thank Sushant Sachdeva, Rasmus Kyng, and Xinwei (David) Yao for their discussions and encouragement.
+
+
+\bibliographystyle{alpha}
+\bibliography{references} 
+
+
+\end{document}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
