@@ -1,78 +1,50 @@
-==================================================================
-https://keybase.io/sx
+://keybase.io/sx
 --------------------------------------------------------------------
 
 I hereby claim:
 
-  * I am an admin of http://shixiao.org
+  * I am an admin of http://www.shixiao.org
   * I am sx (https://keybase.io/sx) on keybase.
-  * I have a public key with fingerprint DE0C 8A35 30EC 1A59 544B  7D83 871E C483 DDD6 6EA3
+  * I have a public key ASCAZEXAcjxmKVejzy03skYDYR9BIUaA7QUuJ_mXBNAdAgo
 
-To claim this, I am signing this object:
+To do so, I am signing this object:
 
 {
-    "body": {
-        "client": {
-            "name": "keybase.io node.js client",
-            "version": "0.7.3"
-        },
-        "key": {
-            "fingerprint": "de0c8a3530ec1a59544b7d83871ec483ddd66ea3",
-            "host": "keybase.io",
-            "key_id": "871EC483DDD66EA3",
-            "uid": "460d4cc238edcbff171423bcbf68a500",
-            "username": "sx"
-        },
-        "merkle_root": {
-            "ctime": 1417754745,
-            "hash": "ef384f98a43efe3fbe8dc4d5c67bbe9efca7c355fb1c55e68e71a8307872fa5c9614eaca1cfe8b067a9798bc3d0a7abb4e560ae5011e6c697136790a0536a698",
-            "seqno": 102165
-        },
-        "service": {
-            "hostname": "shixiao.org",
-            "protocol": "http:"
-        },
-        "type": "web_service_binding",
-        "version": 1
+  "body": {
+    "key": {
+      "eldest_kid": "0120806445c0723c662957a3cf2d37b24603611f41214680ed052e27f99704d01d020a",
+      "host": "keybase.io",
+      "kid": "0120806445c0723c662957a3cf2d37b24603611f41214680ed052e27f99704d01d020a",
+      "uid": "460d4cc238edcbff171423bcbf68a500",
+      "username": "sx"
     },
-    "ctime": 1417754820,
-    "expire_in": 157680000,
-    "prev": "abe1b1feb8dca4f15fd2755e633886f012da5dcba995ec6bc95d13a05e767afe",
-    "seqno": 6,
-    "tag": "signature"
+    "merkle_root": {
+      "ctime": 1508562339,
+      "hash": "a64902cb77ea1089ca269684ed5fd2d4ced9e14f8c432c5c58aab2ca590bd7bfd41d63a789c169164eb95c91182f2bfcf1219ff5da25b17713051368530f40d9",
+      "hash_meta": "2f30377d94a65f1ac8a31fafd68470fb0e88a7c5868f5eb2442906a916bb7eaf",
+      "seqno": 1611037
+    },
+    "service": {
+      "hostname": "www.shixiao.org",
+      "protocol": "http:"
+    },
+    "type": "web_service_binding",
+    "version": 1
+  },
+  "client": {
+    "name": "keybase.io go client",
+    "version": "1.0.34"
+  },
+  "ctime": 1508562394,
+  "expire_in": 504576000,
+  "prev": "19e58dc1b54f2340e612259090b3edd102ffe1cbf0bfd985da0672227c961d02",
+  "seqno": 18,
+  "tag": "signature"
 }
 
-with the aforementioned key, yielding the PGP signature:
+which yields the signature:
 
------BEGIN PGP MESSAGE-----
-Version: GnuPG v2.0.22 (GNU/Linux)
-
-owFVkn9QFVUUxx8PQqJAZCp5kkJLJAQ9d9/u3R8YmAJZ1vgrVCrreXf37nvLj7e0
-74EQw0sgE8QxwKScaegHofLkxzCJiVMjGgIBY2S9GEeokSEFw8ZkQE3Rdhmc8v51
-7z2fe+73e86pDPI1GH12LeksHf7VUefTN84b0orZ3kKMV8QCLKEQE7Jk5HDpOwfM
-RlgClokKeOhEZlmJdCgiMmc4I+eYeCwPqU5ZcWgUbmbMJFYUr+P6Y0l22JCao8p6
-LkxEuMBCEpA4EggIOEBRPCOyJMsQSKBYUhRFmkaQ1FLaFafrgV+x2ZxWWdRuNT41
-WeNTUlJoOnWlzufOBigaFylBsJAsEgVekgiGoCwkr21pFgIc10EnUucsOfN1pdlI
-zcxCVlVRZu0KLlkPEhTBMIBiKKBpgU67hiOJZCmJYyFFIgmREo9YUaBEINAMzyMO
-SQJkBBIAiScEABDNIoaALIkzLGORIBA4mqAQFCAhSIjlcZqBHMOxvECKOGQgz1MI
-0DhEACcIRAs0xxAkzXA4xAFJQ5pjNfFO9I5D0cThFoIGRfpZzZMFpOvWC3bfl13O
-l6FiVlSb9iZHVVyKoGRpAbvLlZOge3YV5OjgdsRb51IctPKyQ9S69f92Ehr6YD1Y
-Cx6PofwcWUVWWScAQ7O4tvR/UJ6WE/KI4AkJ8VpxICURQBItjF4OkmRZWsIJiwiB
-1hzIcQAJNC9wQCRIzSRitIpI6D+XtKYT2nQ/ss0BXbkqworKjU/6GXyMBv+HjPq8
-GgIfDrk/xEEBIYbPH/vUcudSdQbzxIY2U637nwGTYHz9bH3M8E/H+0u3zOt99VZV
-xYnjjryitScnysb/Pm2dXt9UN/j1EvOxpyeu9blrwgfSea55UUWGY9UzU/6NBZM9
-83uWrekYit04udsADtX7Gr9dkxrn+1F1beazv12np07brVHLDgc396FDwWn3/LxV
-I28WhX1mGYl2e87Hum7JY5Mbd1Crbfs9Ez/0dwWEdezNsj/X5X1j6seYI0y2t60k
-rn3gBbYs+WxKf2XiFeEvcUZ5zTZS606/vOJi5+30D85Et13qcVfN9OJTBzNfvruz
-16QNGduwOu7RipywpYt3tW/If/uLKCyvIXzzntp520NL37+x1fP4/IChttwdXcCy
-wJaNX12+sKU0KXt8fVTlS6dKz5HD3ZlHbAnbLn9vCnkvInqfT0Pzgew/DyQNtmdV
-/5FcElmmDtz2PL9l4q3EL72d9ZaxulXbMn9PzCLiv5peV5NkOelpWjTyyuL+DxtH
-9xvx0NaZ6H0pC45GJR0bdY8O7fnlTs3R+kbwbodz4pQ1dDAA+7i4tbw4rIK6+03J
-jZ0r4x6pOvPdwkIwNjITXLzUM3wlwNQS3nRYCbJ1bkrsaklzb1Xv1WW0B+8NfCrY
-FLa8bNr/6vW8FV7oPXfBr3wc21TvvRm4rrY7pvt86kUTG8uurf75xQjfE5vL6ZvX
-WrGI3bYLn/wL
-=GlMV
------END PGP MESSAGE-----
+hKRib2R5hqhkZXRhY2hlZMOpaGFzaF90eXBlCqNrZXnEIwEggGRFwHI8ZilXo88tN7JGA2EfQSFGgO0FLif5lwTQHQIKp3BheWxvYWTFA0F7ImJvZHkiOnsia2V5Ijp7ImVsZGVzdF9raWQiOiIwMTIwODA2NDQ1YzA3MjNjNjYyOTU3YTNjZjJkMzdiMjQ2MDM2MTFmNDEyMTQ2ODBlZDA1MmUyN2Y5OTcwNGQwMWQwMjBhIiwiaG9zdCI6ImtleWJhc2UuaW8iLCJraWQiOiIwMTIwODA2NDQ1YzA3MjNjNjYyOTU3YTNjZjJkMzdiMjQ2MDM2MTFmNDEyMTQ2ODBlZDA1MmUyN2Y5OTcwNGQwMWQwMjBhIiwidWlkIjoiNDYwZDRjYzIzOGVkY2JmZjE3MTQyM2JjYmY2OGE1MDAiLCJ1c2VybmFtZSI6InN4In0sIm1lcmtsZV9yb290Ijp7ImN0aW1lIjoxNTA4NTYyMzM5LCJoYXNoIjoiYTY0OTAyY2I3N2VhMTA4OWNhMjY5Njg0ZWQ1ZmQyZDRjZWQ5ZTE0ZjhjNDMyYzVjNThhYWIyY2E1OTBiZDdiZmQ0MWQ2M2E3ODljMTY5MTY0ZWI5NWM5MTE4MmYyYmZjZjEyMTlmZjVkYTI1YjE3NzEzMDUxMzY4NTMwZjQwZDkiLCJoYXNoX21ldGEiOiIyZjMwMzc3ZDk0YTY1ZjFhYzhhMzFmYWZkNjg0NzBmYjBlODhhN2M1ODY4ZjVlYjI0NDI5MDZhOTE2YmI3ZWFmIiwic2Vxbm8iOjE2MTEwMzd9LCJzZXJ2aWNlIjp7Imhvc3RuYW1lIjoid3d3LnNoaXhpYW8ub3JnIiwicHJvdG9jb2wiOiJodHRwOiJ9LCJ0eXBlIjoid2ViX3NlcnZpY2VfYmluZGluZyIsInZlcnNpb24iOjF9LCJjbGllbnQiOnsibmFtZSI6ImtleWJhc2UuaW8gZ28gY2xpZW50IiwidmVyc2lvbiI6IjEuMC4zNCJ9LCJjdGltZSI6MTUwODU2MjM5NCwiZXhwaXJlX2luIjo1MDQ1NzYwMDAsInByZXYiOiIxOWU1OGRjMWI1NGYyMzQwZTYxMjI1OTA5MGIzZWRkMTAyZmZlMWNiZjBiZmQ5ODVkYTA2NzIyMjdjOTYxZDAyIiwic2Vxbm8iOjE4LCJ0YWciOiJzaWduYXR1cmUifaNzaWfEQOjiLMmhJL1Wnj2r61YA8T3l21t3R4rPQOb33ibN126cDt8LvSfsXI7J7YW7XmeiRVqMb0XgDQLbR3V8rh4KNgeoc2lnX3R5cGUgpGhhc2iCpHR5cGUIpXZhbHVlxCDnpLL09DZ/R0sxst33+lxF+AdW2CDj5Fz6JVWoHqf9VqN0YWfNAgKndmVyc2lvbgE=
 
 And finally, I am proving ownership of this host by posting or
 appending to this document.
@@ -80,3 +52,4 @@ appending to this document.
 View my publicly-auditable identity here: https://keybase.io/sx
 
 ==================================================================
+
