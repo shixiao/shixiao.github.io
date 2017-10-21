@@ -1,0 +1,55 @@
+://keybase.io/sx
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of http://www.shixiao.org
+  * I am sx (https://keybase.io/sx) on keybase.
+  * I have a public key ASCAZEXAcjxmKVejzy03skYDYR9BIUaA7QUuJ_mXBNAdAgo
+
+To do so, I am signing this object:
+
+{
+  "body": {
+    "key": {
+      "eldest_kid": "0120806445c0723c662957a3cf2d37b24603611f41214680ed052e27f99704d01d020a",
+      "host": "keybase.io",
+      "kid": "0120806445c0723c662957a3cf2d37b24603611f41214680ed052e27f99704d01d020a",
+      "uid": "460d4cc238edcbff171423bcbf68a500",
+      "username": "sx"
+    },
+    "merkle_root": {
+      "ctime": 1508562339,
+      "hash": "a64902cb77ea1089ca269684ed5fd2d4ced9e14f8c432c5c58aab2ca590bd7bfd41d63a789c169164eb95c91182f2bfcf1219ff5da25b17713051368530f40d9",
+      "hash_meta": "2f30377d94a65f1ac8a31fafd68470fb0e88a7c5868f5eb2442906a916bb7eaf",
+      "seqno": 1611037
+    },
+    "service": {
+      "hostname": "www.shixiao.org",
+      "protocol": "http:"
+    },
+    "type": "web_service_binding",
+    "version": 1
+  },
+  "client": {
+    "name": "keybase.io go client",
+    "version": "1.0.34"
+  },
+  "ctime": 1508562394,
+  "expire_in": 504576000,
+  "prev": "19e58dc1b54f2340e612259090b3edd102ffe1cbf0bfd985da0672227c961d02",
+  "seqno": 18,
+  "tag": "signature"
+}
+
+which yields the signature:
+
+hKRib2R5hqhkZXRhY2hlZMOpaGFzaF90eXBlCqNrZXnEIwEggGRFwHI8ZilXo88tN7JGA2EfQSFGgO0FLif5lwTQHQIKp3BheWxvYWTFA0F7ImJvZHkiOnsia2V5Ijp7ImVsZGVzdF9raWQiOiIwMTIwODA2NDQ1YzA3MjNjNjYyOTU3YTNjZjJkMzdiMjQ2MDM2MTFmNDEyMTQ2ODBlZDA1MmUyN2Y5OTcwNGQwMWQwMjBhIiwiaG9zdCI6ImtleWJhc2UuaW8iLCJraWQiOiIwMTIwODA2NDQ1YzA3MjNjNjYyOTU3YTNjZjJkMzdiMjQ2MDM2MTFmNDEyMTQ2ODBlZDA1MmUyN2Y5OTcwNGQwMWQwMjBhIiwidWlkIjoiNDYwZDRjYzIzOGVkY2JmZjE3MTQyM2JjYmY2OGE1MDAiLCJ1c2VybmFtZSI6InN4In0sIm1lcmtsZV9yb290Ijp7ImN0aW1lIjoxNTA4NTYyMzM5LCJoYXNoIjoiYTY0OTAyY2I3N2VhMTA4OWNhMjY5Njg0ZWQ1ZmQyZDRjZWQ5ZTE0ZjhjNDMyYzVjNThhYWIyY2E1OTBiZDdiZmQ0MWQ2M2E3ODljMTY5MTY0ZWI5NWM5MTE4MmYyYmZjZjEyMTlmZjVkYTI1YjE3NzEzMDUxMzY4NTMwZjQwZDkiLCJoYXNoX21ldGEiOiIyZjMwMzc3ZDk0YTY1ZjFhYzhhMzFmYWZkNjg0NzBmYjBlODhhN2M1ODY4ZjVlYjI0NDI5MDZhOTE2YmI3ZWFmIiwic2Vxbm8iOjE2MTEwMzd9LCJzZXJ2aWNlIjp7Imhvc3RuYW1lIjoid3d3LnNoaXhpYW8ub3JnIiwicHJvdG9jb2wiOiJodHRwOiJ9LCJ0eXBlIjoid2ViX3NlcnZpY2VfYmluZGluZyIsInZlcnNpb24iOjF9LCJjbGllbnQiOnsibmFtZSI6ImtleWJhc2UuaW8gZ28gY2xpZW50IiwidmVyc2lvbiI6IjEuMC4zNCJ9LCJjdGltZSI6MTUwODU2MjM5NCwiZXhwaXJlX2luIjo1MDQ1NzYwMDAsInByZXYiOiIxOWU1OGRjMWI1NGYyMzQwZTYxMjI1OTA5MGIzZWRkMTAyZmZlMWNiZjBiZmQ5ODVkYTA2NzIyMjdjOTYxZDAyIiwic2Vxbm8iOjE4LCJ0YWciOiJzaWduYXR1cmUifaNzaWfEQOjiLMmhJL1Wnj2r61YA8T3l21t3R4rPQOb33ibN126cDt8LvSfsXI7J7YW7XmeiRVqMb0XgDQLbR3V8rh4KNgeoc2lnX3R5cGUgpGhhc2iCpHR5cGUIpXZhbHVlxCDnpLL09DZ/R0sxst33+lxF+AdW2CDj5Fz6JVWoHqf9VqN0YWfNAgKndmVyc2lvbgE=
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/sx
+
+==================================================================
+
